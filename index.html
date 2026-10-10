@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>King AI - Powered by Agent Furqan</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #0b0f19; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; height: 100vh; overflow: hidden; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #111827; border-bottom: 1px solid #1e293b; }
+        .logo { font-size: 20px; font-weight: 700; color: #38bdf8; }
+        .agent-status { background: #065f46; color: #34d399; padding: 4px 12px; border-radius: 9999px; font-size: 13px; font-weight: 600; }
+        .main-container { display: flex; height: calc(100vh - 53px); }
+        .flow-canvas { flex: 3; padding: 30px; display: flex; gap: 20px; align-items: center; justify-content: center; background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 20px 20px; }
+        .node-card { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 12px; width: 240px; }
+        .node-card h4 { color: #38bdf8; margin-bottom: 10px; font-size: 15px; }
+        .node-card select, .node-card input { width: 100%; padding: 8px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px; margin-top: 5px; }
+        .arrow { font-size: 20px; color: #64748b; }
+        .video-placeholder { background: #000; height: 130px; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px dashed #475569; margin-top: 10px; }
+        .generate-btn { width: 100%; padding: 10px; background: #0284c7; color: white; border: none; border-radius: 6px; margin-top: 12px; cursor: pointer; font-weight: 600; }
+        .sidebar { flex: 1; min-width: 320px; background: #111827; border-left: 1px solid #1e293b; padding: 16px; display: flex; flex-direction: column; }
+        .chat-header { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #f3f4f6; }
+        .chat-box { flex: 1; background: #0f172a; border-radius: 8px; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; border: 1px solid #1e293b; }
+        .msg { padding: 8px 12px; border-radius: 8px; font-size: 13px; max-width: 85%; line-height: 1.4; }
+        .agent-msg { background: #1e293b; color: #e2e8f0; align-self: flex-start; border-left: 3px solid #38bdf8; }
+        .user-msg { background: #0284c7; color: white; align-self: flex-end; }
+        .user-input-box { display: flex; gap: 8px; margin-top: 12px; }
+        .user-input-box input { flex: 1; padding: 10px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; outline: none; }
+        .user-input-box button { padding: 10px 16px; background: #38bdf8; color: #0f172a; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">⚡ King AI Studio</div>
+        <div class="agent-status">Agent Furqan (Active)</div>
+    </header>
+
+    <div class="main-container">
+        <div class="flow-canvas">
+            <div class="node-card">
+                <h4>1. Prompt Input</h4>
+                <label style="font-size: 12px; color: #94a3b8;">Video Topic / Script:</label>
+                <input type="text" placeholder="e.g. 1 Hour Peaceful Rain Sound..." id="promptInput">
+            </div>
+
+            <div class="arrow">➔</div>
+
+            <div class="node-card">
+                <h4>2. Duration & Quality</h4>
+                <label style="font-size: 12px; color: #94a3b8;">Select Length:</label>
+                <select id="durationSelect">
+                    <option value="5">5 Minutes</option>
+                    <option value="15">15 Minutes</option>
+                    <option value="30">30 Minutes</option>
+                    <option value="60" selected>1 Hour (60 Mins)</option>
+                </select>
+            </div>
+
+            <div class="arrow">➔</div>
+
+            <div class="node-card">
+                <h4>3. AI Render Engine</h4>
+                <div class="video-placeholder" id="videoBox">
+                    <span style="font-size: 24px;">🎬</span>
+                    <span style="font-size: 11px; color: #94a3b8; margin-top: 6px;">Ready for 1-Hour Render</span>
+                </div>
+                <button class="generate-btn" onclick="startGeneration()">Generate Video</button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="chat-header">💬 Chat with Agent Furqan</div>
+            <div class="chat-box" id="chatBox">
+                <div class="msg agent-msg">
+                    <b>Furqan:</b> Assalam-o-Alaikum! Main King AI ka official agent Furqan hoon. Aap mujh se koi bhi sawal pooch sakte hain!
+                </div>
+            </div>
+            <div class="user-input-box">
+                <input type="text" id="chatInput" placeholder="Type a message to Furqan..." onkeypress="if(event.key === 'Enter') sendMsg()">
+                <button onclick="sendMsg()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API KEY YAHAN PASTE KAREIN
+        const API_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
+
+        async function sendMsg() {
+            let input = document.getElementById('chatInput');
+            let chatBox = document.getElementById('chatBox');
+            let userText = input.value.trim();
+
+            if (userText === '') return;
+
+            chatBox.innerHTML += `<div class="msg user-msg">${userText}</div>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            let typingMsg = document.createElement('div');
+            typingMsg.className = 'msg agent-msg';
+            typingMsg.innerHTML = `<b>Furqan:</b> Soch raha hoon... ⏳`;
+            chatBox.appendChild(typingMsg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `Aapka naam Agent Furqan hai. Aap King AI website ke official AI agent hain. Polite aur helpful andaaz mein Urdu/Hindi/English mein jawab dein. User sawal: ${userText}`
+                            }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                let reply = data.candidates[0].content.parts[0].text;
+                typingMsg.innerHTML = `<b>Furqan:</b> ${reply}`;
+            } catch (error) {
+                typingMsg.innerHTML = `<b>Furqan:</b> API Key set nahi hui. Code mein 'AQ.Ab8RN6LvQ7OI4ZF0R2iqenyKW-sF_VRBQoidkn5ta05P2NmINA' ko apni key se badlein.`;
+            }
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function startGeneration() {
+            let duration = document.getElementById('durationSelect').value;
+            let videoBox = document.getElementById('videoBox');
+            let chatBox = document.getElementById('chatBox');
+
+            videoBox.innerHTML = `<span style="color:#38bdf8; font-size:12px;">⏳ Rendering ${duration}-Min Video...</span>`;
+            
+            chatBox.innerHTML += `<div class="msg agent-msg"><b>Furqan:</b> Main ne ${duration} minutes ki video render karna shuru kar di hai.</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            setTimeout(() => {
+                videoBox.innerHTML = `<span style="color:#22c55e; font-size:12px;">✅ Video Ready! (${duration} Mins)</span>`;
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
